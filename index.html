@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>にゃんこ銃士 合成＆必要ダイヤ計算シミュレーター</title>
+  <meta name="description" content="マージ系放置ゲーム「にゃんこ銃士」専用の合成・必要ダイヤ計算シミュレーター。スマホ片手操作に最適化。">
+  <meta name="theme-color" content="#4A3728">
+  
+  <!-- Google Fonts: 親しみやすい丸ゴシック & 英数フォント -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=M+PLUS+Rounded+1c:wght@500;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM - 温かみのあるラテ＆ベージュ＋鮮やかなランクカラー
+       ========================================================================== */
+    :root {
+      --bg-page: #F6F3EE;
+      --bg-card: #FFFFFF;
+      --bg-card-sub: #FAF8F5;
+      --bg-input: #F0ECE4;
+      
+      --color-primary: #5C4332;       /* ビターブラウン */
+      --color-primary-dark: #3F2D21;
+      --color-accent: #E07A5F;        /* テラコッタオレンジ */
+      --color-accent-gold: #D97706;   /* ダイヤ・ゴールド */
+      --color-text-main: #33261D;
+      --color-text-sub: #786A5E;
+      --color-text-muted: #9E9185;
+      --color-border: #E8E2D9;
+      --color-border-hover: #D0C6B8;
+      
+      /* ランクカラー（13段階） */
+      --rank-d: #8C6239;
+      --rank-c: #D4A017;
+      --rank-b: #2563EB;
+      --rank-a: #16A34A;
+      --rank-s: #EA580C;
+      --rank-ss: #DC2626;
+      --rank-sss: #9333EA;
+      --rank-x: #0284C7;
+      --rank-xx: #DB2777;
+      --rank-xxx: #CA8A04;
+      --rank-z: #1E3A8A;
+      --rank-zz: #7C3AED;
+      --rank-zzz: #991B1B;
+
+      --font-main: 'M PLUS Rounded 1c', -apple-system, sans-serif;
+      --font-num: 'Outfit', 'Fredoka', sans-serif;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+      --shadow-sm: 0 2px 6px rgba(63, 45, 33, 0.05);
+      --shadow-md: 0 6px 18px rgba(63, 45, 33, 0.08);
+      
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--color-text-main);
+      font-family: var(--font-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* スマホ固定サマリーバーの高さ分（約76px + 安全領域）を確保 */
+      padding-bottom: max(88px, calc(72px + env(safe-area-inset-bottom)));
+    }
+
+    .app-container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 0 12px;
+    }
+
+    /* --------------------------------------------------------------------------
+       ヘッダー（スマホで無駄を削ぎ落としたコンパクト設計）
+       -------------------------------------------------------------------------- */
+    .hero-header {
+      background: linear-gradient(135deg, #4A3728 0%, #302217 100%);
+      color: #FFF;
+      padding: clamp(1.2rem, 3vw, 2rem) 16px clamp(1.4rem, 3.2vw, 2.2rem);
+      border-radius: 0 0 22px 22px;
+      box-shadow: 0 8px 20px rgba(48, 34, 23, 0.15);
+      margin-bottom: 1.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-header::before {
+      content: "🐾";
+      position: absolute;
+      right: -8px;
+      bottom: -15px;
+      font-size: 5.5rem;
+      opacity: 0.08;
+      pointer-events: none;
+      transform: rotate(-15deg);
+    }
+
+    .hero-inner {
+      max-width: 880px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      padding: 3px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.74rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .hero-title {
+      font-size: clamp(1.35rem, 3.8vw, 2rem);
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 0.25rem;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero-title span {
+      color: #FFD166;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(0.76rem, 1.8vw, 0.88rem);
+      color: #E2D9D0;
+      font-weight: 500;
+    }
+
+    /* --------------------------------------------------------------------------
+       カードコンポーネント
+       -------------------------------------------------------------------------- */
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: clamp(1rem, 2.8vw, 1.6rem);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      margin-bottom: 1.2rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 2px dashed var(--color-border);
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-icon {
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+
+    .card-title {
+      font-size: clamp(1rem, 2.2vw, 1.18rem);
+      font-weight: 900;
+      color: var(--color-text-main);
+    }
+
+    /* --------------------------------------------------------------------------
+       目標ランク選択（スマホで押しやすいカルーセル/グリッド）
+       -------------------------------------------------------------------------- */
+    .rank-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      .rank-selector-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+    }
+
+    .rank-pick-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      padding: 8px 2px;
+      min-height: 52px;
+      background: var(--bg-card-sub);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-family: var(--font-num);
+      transition: all 0.15s var(--ease);
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .rank-pick-btn:active {
+      transform: scale(0.95);
+    }
+
+    .rank-pick-btn.active {
+      background: #FFF;
+      border-color: var(--btn-color, var(--color-primary));
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), inset 0 0 0 1px var(--btn-color);
+      transform: scale(1.03);
+      z-index: 2;
+    }
+
+    .rank-pick-btn .r-symbol {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: var(--btn-color, var(--color-text-main));
+      line-height: 1;
+    }
+
+    .rank-pick-btn .r-sub {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      font-family: var(--font-main);
+    }
+
+    /* 目標個数セレクタ（スマホで1行にすっきり収まるデザイン） */
+    .target-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card-sub);
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      margin-bottom: 1.2rem;
+      gap: 8px;
+    }
+
+    .target-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .target-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 12px;
+      border-radius: var(--radius-pill);
+      color: #FFF;
+      font-family: var(--font-num);
+      font-size: 1.05rem;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .target-d-text {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: var(--color-text-sub);
+      white-space: nowrap;
+    }
+
+    .target-count-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .stepper-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      background: #FFF;
+      color: var(--color-text-main);
+      font-size: 1.2rem;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      transition: all 0.12s ease;
+    }
+
+    .stepper-btn:active {
+      transform: scale(0.92);
+      background: var(--bg-input);
+    }
+
+    .target-num-input {
+      width: 48px;
+      height: 36px;
+      text-align: center;
+      font-family: var(--font-num);
+      font-size: 1.1rem;
+      font-weight: 900;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: #FFF;
+      color: var(--color-text-main);
+    }
+
+    /* --------------------------------------------------------------------------
+       計算結果ダッシュボード（スマホで見やすいカード配置）
+       -------------------------------------------------------------------------- */
+    .result-hero-box {
+      background: linear-gradient(145deg, #FFF9F2 0%, #FFF4E5 100%);
+      border: 2px solid #F5D3A6;
+      border-radius: var(--radius-lg);
+      padding: clamp(1rem, 2.5vw, 1.5rem);
+      margin-bottom: 1.4rem;
+      box-shadow: 0 6px 20px rgba(224, 122, 95, 0.1);
+      position: relative;
+    }
+
+    .achieved-banner {
+      display: none;
+      background: #16A34A;
+      color: #FFF;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      text-align: center;
+      font-weight: 900;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      animation: popBounce 0.4s var(--ease);
+    }
+
+    .achieved-banner.show {
+      display: block;
+    }
+
+    @keyframes popBounce {
+      0% { transform: scale(0.9); opacity: 0; }
+      70% { transform: scale(1.02); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .progress-wrapper {
+      margin-bottom: 0.9rem;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .progress-track {
+      height: 12px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #E07A5F 0%, #F59E0B 100%);
+      border-radius: var(--radius-pill);
+      width: 0%;
+      transition: width 0.35s var(--ease);
+    }
+
+    /* 指標グリッド：スマホで2列×2段にスッキリ整列 */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 0.8rem;
+    }
+
+    .metric-card {
+      background: #FFF;
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      border: 1px solid rgba(224, 122, 95, 0.22);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--color-text-sub);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .metric-val {
+      font-family: var(--font-num);
+      font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+      font-weight: 900;
+      line-height: 1.1;
+      color: var(--color-primary);
+    }
+
+    .metric-val.highlight-diamond {
+      color: var(--color-accent-gold);
+    }
+
+    .metric-val.highlight-d {
+      color: var(--color-accent);
+    }
+
+    .metric-unit {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      margin-left: 2px;
+      font-family: var(--font-main);
+    }
+
+    .rate-condition-notice {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px;
+      font-size: 0.74rem;
+      color: var(--color-text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 3px solid var(--color-accent-gold);
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    /* --------------------------------------------------------------------------
+       所持数入力セクション（スマホ片手操作に最適な行ステッパー）
+       -------------------------------------------------------------------------- */
+    .inventory-section {
+      margin-top: 1.4rem;
+    }
+
+    .inventory-tools {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tool-btn-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-pill {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-sub);
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.74rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-pill:active {
+      transform: scale(0.94);
+    }
+
+    .btn-pill:hover {
+      background: var(--bg-input);
+      color: var(--color-text-main);
+    }
+
+    .btn-pill.danger:hover,
+    .btn-pill.danger:active {
+      background: #FEE2E2;
+      color: #DC2626;
+      border-color: #FCA5A5;
+    }
+
+    /* スマホで押しやすい行ステッパーレイアウト */
+    .inventory-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    @media (min-width: 680px) {
+      .inventory-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+    }
+
+    .inv-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card-sub);
+      border: 1px solid var(--color-border);
+      border-left: 5px solid var(--row-color, var(--color-primary));
+      border-radius: var(--radius-md);
+      padding: 7px 10px;
+      gap: 8px;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .inv-row.has-count {
+      background: #FFFFFF;
+      border-color: rgba(92, 67, 50, 0.22);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .inv-row-info {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .inv-row-badge {
+      font-family: var(--font-num);
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: var(--row-color);
+      min-width: 40px;
+    }
+
+    .inv-row-equiv {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--color-text-muted);
+    }
+
+    /* ステッパーコントロール（大きめの−1 / +1 ボタン） */
+    .inv-stepper-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .inv-step-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      background: #FFF;
+      font-family: var(--font-num);
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: var(--color-text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      touch-action: manipulation;
+      transition: all 0.12s ease;
+    }
+
+    .inv-step-btn:active {
+      transform: scale(0.9);
+      background: #E8E2D9;
+    }
+
+    .inv-step-btn.btn-plus {
+      color: var(--color-accent);
+      background: #FFF8F5;
+      border-color: rgba(224, 122, 95, 0.35);
+    }
+
+    .inv-step-btn.btn-plus:active {
+      background: #FCE8E2;
+    }
+
+    .inv-step-btn.btn-minus {
+      color: var(--color-text-sub);
+    }
+
+    .inv-num-input {
+      width: 52px;
+      height: 42px;
+      text-align: center;
+      font-family: var(--font-num);
+      font-size: 1.1rem;
+      font-weight: 900;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: #FFF;
+      color: var(--color-text-main);
+    }
+
+    .inv-num-input:focus {
+      outline: none;
+      border-color: var(--row-color, var(--color-primary));
+      box-shadow: 0 0 0 2px rgba(92, 67, 50, 0.12);
+    }
+
+    /* --------------------------------------------------------------------------
+       ガチャ設定ドロワー
+       -------------------------------------------------------------------------- */
+    .settings-card {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-top: 1.2rem;
+    }
+
+    .settings-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.82rem;
+      user-select: none;
+      color: var(--color-text-sub);
+    }
+
+    .settings-body {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--color-border);
+      display: none;
+    }
+
+    .settings-body.open {
+      display: block;
+    }
+
+    .gacha-param-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .param-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .param-field label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--color-text-sub);
+    }
+
+    .param-field input {
+      height: 36px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 0 8px;
+      font-family: var(--font-num);
+      font-size: 0.95rem;
+      font-weight: 800;
+      background: #FFF;
+      color: var(--color-text-main);
+    }
+
+    /* --------------------------------------------------------------------------
+       📱 スマホ常時固定サマリーバー（Sticky Bottom Bar）
+       -------------------------------------------------------------------------- */
+    .sticky-summary-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(63, 45, 33, 0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: #FFF;
+      padding: 9px 16px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.18);
+      z-index: 100;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .sticky-inner {
+      max-width: 880px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .sticky-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .sticky-progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #E2D9D0;
+    }
+
+    .sticky-progress-bar {
+      width: 70px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+    }
+
+    .sticky-progress-fill {
+      height: 100%;
+      background: #F59E0B;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .sticky-deficit {
+      font-size: 0.74rem;
+      color: #FFC4BC;
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .sticky-right {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .sticky-dia-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #FFD166;
+    }
+
+    .sticky-dia-val {
+      font-family: var(--font-num);
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #FFD166;
+      line-height: 1;
+    }
+
+    /* フッター */
+    footer {
+      text-align: center;
+      padding: 1.5rem 16px 0.5rem;
+      color: var(--color-text-muted);
+      font-size: 0.75rem;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヒーローヘッダー -->
+  <header class="hero-header">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span>🐾</span>
+        <span>にゃんこ銃士 合成シミュレーター</span>
+      </div>
+      <h1 class="hero-title">にゃんこ銃士 <span>合成計算ツール</span></h1>
+      <p class="hero-subtitle">同ランク2個マージの必要本数 ＆ 必要ダイヤ数を瞬時に計算！</p>
+    </div>
+  </header>
+
+  <main class="app-container">
+
+    <div class="card">
+      
+      <!-- 目標ランク設定ヘッダー -->
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon">🎯</span>
+          <div>
+            <h2 class="card-title">目標ランクの選択</h2>
+          </div>
+        </div>
+      </div>
+
+      <!-- 目標ランク選択ボタン (C 〜 ZZZ) -->
+      <div class="rank-selector-grid" id="rankSelectorGrid" role="radiogroup" aria-label="目標ランク">
+        <!-- JSで自動生成 -->
+      </div>
+
+      <!-- 目標個数セレクタ -->
+      <div class="target-bar">
+        <div class="target-info">
+          <div class="target-badge" id="targetBadgeDisplay">
+            <span id="targetBadgeRank">SSS</span>
+          </div>
+          <span class="target-d-text" id="targetDCountText">
+            (1個 = 64D)
+          </span>
+        </div>
+        <div class="target-count-control">
+          <span style="font-size: 0.78rem; font-weight: 800;">目標数:</span>
+          <button type="button" class="stepper-btn" id="btnDecCount" aria-label="目標本数を1減らす">−</button>
+          <input type="number" id="targetCountInput" class="target-num-input" value="1" min="1" max="999" inputmode="numeric">
+          <button type="button" class="stepper-btn" id="btnIncCount" aria-label="目標本数を1増やす">＋</button>
+        </div>
+      </div>
+
+      <!-- リアルタイム計算結果ダッシュボード -->
+      <div class="result-hero-box" id="resultHeroBox">
+        
+        <div id="achievedBanner" class="achieved-banner">
+          🎉 おめでとうございます！所持素材だけで目標達成可能です！
+        </div>
+
+        <!-- 進捗プログレスバー -->
+        <div class="progress-wrapper">
+          <div class="progress-meta">
+            <span>合成進捗率</span>
+            <span id="progressPercentText">0.0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressBarFill"></div>
+          </div>
+        </div>
+
+        <!-- 主要指標グリッド（スマホで2列×2段に配置） -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">
+              <span>📦</span>
+              <span>必要D総数</span>
+            </div>
+            <div class="metric-val highlight-d">
+              <span id="totalDNeededVal">64</span>
+              <span class="metric-unit">本</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">
+              <span>🎒</span>
+              <span>現在の所持D</span>
+            </div>
+            <div class="metric-val">
+              <span id="currentDVal">0</span>
+              <span class="metric-unit">本分</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">
+              <span>⚡</span>
+              <span>不足しているD</span>
+            </div>
+            <div class="metric-val" style="color: #DC2626;">
+              <span id="deficitDVal">64</span>
+              <span class="metric-unit">本分</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">
+              <span>💎</span>
+              <span>必要ダイヤ数</span>
+            </div>
+            <div class="metric-val highlight-diamond">
+              <span id="expectedDiamondsVal">6,400</span>
+              <span class="metric-unit">ダイヤ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ガチャ条件表示バナー -->
+        <div class="rate-condition-notice">
+          <span>🎲 1回 <strong><span id="noticeCostVal">100</span> ダイヤ</strong>（Dランク100%排出で算出）</span>
+          <span>必要ガチャ: <strong id="expectedPullsVal">64</strong> 回</span>
+        </div>
+
+      </div>
+
+      <!-- 現在の所持数入力セクション (D 〜 ZZ) -->
+      <div class="inventory-section">
+        
+        <div class="inventory-tools">
+          <div class="card-title-group">
+            <span class="card-icon">🎒</span>
+            <h3 style="font-size: 1rem; font-weight: 800;">現在持っている銃 (D 〜 ZZ)</h3>
+          </div>
+          <div class="tool-btn-group">
+            <button type="button" class="btn-pill" id="btnSynthesizeMax">🚀 最大合成シミュレート</button>
+            <button type="button" class="btn-pill danger" id="btnClearAllInv">全リセット</button>
+          </div>
+        </div>
+
+        <!-- スマホ片手操作に最適化した行ステッパーリスト -->
+        <div class="inventory-list" id="inventoryList">
+          <!-- JSで各ランクの入力行を自動生成 -->
+        </div>
+
+      </div>
+
+      <!-- ガチャ設定ドロワー -->
+      <div class="settings-card">
+        <div class="settings-summary" id="settingsToggle">
+          <span>⚙️ ダイヤ・ガチャ詳細設定</span>
+          <span id="settingsArrow">▼</span>
+        </div>
+        <div class="settings-body" id="settingsBody">
+          <div class="gacha-param-row">
+            <div class="param-field">
+              <label for="inputGachaCost">1回の消費ダイヤ</label>
+              <input type="number" id="inputGachaCost" value="100" min="1" step="10" inputmode="numeric">
+            </div>
+            <div class="param-field">
+              <label for="inputRateD">D排出率 (%)</label>
+              <input type="number" id="inputRateD" value="100" min="0" max="100" step="1" inputmode="decimal">
+            </div>
+            <div class="param-field">
+              <label for="inputRateC">C排出率 (%)</label>
+              <input type="number" id="inputRateC" value="0" min="0" max="100" step="1" inputmode="decimal">
+            </div>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 6px;">
+            ※ 初期状態は「Dランク100%排出（100ダイヤ＝1D）」設定です。
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- 📱 スマホ常時固定サマリーバー（画面スクロール時も結果がひと目でわかる） -->
+  <aside class="sticky-summary-bar" id="stickySummaryBar" title="タップで結果エリアへスクロール">
+    <div class="sticky-inner">
+      <div class="sticky-left">
+        <div class="sticky-progress-wrap">
+          <span id="stickyTargetName">SSS</span>
+          <div class="sticky-progress-bar">
+            <div class="sticky-progress-fill" id="stickyProgressFill"></div>
+          </div>
+          <span id="stickyPercentVal">0%</span>
+        </div>
+        <div class="sticky-deficit">不足: <strong id="stickyDeficitVal">64</strong> 本分</div>
+      </div>
+      <div class="sticky-right">
+        <span class="sticky-dia-label">必要💎</span>
+        <span class="sticky-dia-val" id="stickyDiaVal">6,400</span>
+      </div>
+    </div>
+  </aside>
+
+  <footer>
+    <p>にゃんこ銃士 合成シミュレーター // 非公式ファンツール</p>
+  </footer>
+
+  <!-- ==========================================================================
+       JAVASCRIPT LOGIC
+       ========================================================================== -->
+  <script>
+    const RANKS = [
+      { id: 'D',   tier: 1,  dEquiv: 1,    color: '#8C6239', name: 'Dランク' },
+      { id: 'C',   tier: 2,  dEquiv: 2,    color: '#D4A017', name: 'Cランク' },
+      { id: 'B',   tier: 3,  dEquiv: 4,    color: '#2563EB', name: 'Bランク' },
+      { id: 'A',   tier: 4,  dEquiv: 8,    color: '#16A34A', name: 'Aランク' },
+      { id: 'S',   tier: 5,  dEquiv: 16,   color: '#EA580C', name: 'Sランク' },
+      { id: 'SS',  tier: 6,  dEquiv: 32,   color: '#DC2626', name: 'SSランク' },
+      { id: 'SSS', tier: 7,  dEquiv: 64,   color: '#9333EA', name: 'SSSランク' },
+      { id: 'X',   tier: 8,  dEquiv: 128,  color: '#0284C7', name: 'Xランク' },
+      { id: 'XX',  tier: 9,  dEquiv: 256,  color: '#DB2777', name: 'XXランク' },
+      { id: 'XXX', tier: 10, dEquiv: 512,  color: '#CA8A04', name: 'XXXランク' },
+      { id: 'Z',   tier: 11, dEquiv: 1024, color: '#1E3A8A', name: 'Zランク' },
+      { id: 'ZZ',  tier: 12, dEquiv: 2048, color: '#7C3AED', name: 'ZZランク' },
+      { id: 'ZZZ', tier: 13, dEquiv: 4096, color: '#991B1B', name: 'ZZZランク' }
+    ];
+
+    const state = {
+      targetRankId: 'SSS',
+      targetCount: 1,
+      inventory: {},
+      gachaCost: 100,
+      rates: {
+        D: 100,
+        C: 0
+      }
+    };
+
+    RANKS.forEach(r => {
+      state.inventory[r.id] = 0;
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStateFromStorage();
+      renderRankButtons();
+      renderInventoryList();
+      bindEvents();
+      recalculate();
+    });
+
+    // 目標ランク選択ボタンの描画 (C 〜 ZZZ)
+    function renderRankButtons() {
+      const container = document.getElementById('rankSelectorGrid');
+      container.innerHTML = '';
+
+      const selectableRanks = RANKS.slice(1);
+
+      selectableRanks.forEach(r => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `rank-pick-btn ${r.id === state.targetRankId ? 'active' : ''}`;
+        btn.style.setProperty('--btn-color', r.color);
+        btn.dataset.rank = r.id;
+        btn.setAttribute('role', 'radio');
+        btn.setAttribute('aria-checked', r.id === state.targetRankId);
+        btn.innerHTML = `
+          <span class="r-symbol">${r.id}</span>
+          <span class="r-sub">${r.dEquiv}D</span>
+        `;
+        btn.addEventListener('click', () => {
+          setTargetRank(r.id);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    // スマホ片手操作に最適な行ステッパーリストの描画 (D 〜 ZZ)
+    function renderInventoryList() {
+      const container = document.getElementById('inventoryList');
+      container.innerHTML = '';
+
+      const inputRanks = RANKS.slice(0, 12);
+
+      inputRanks.forEach(r => {
+        const count = state.inventory[r.id] || 0;
+        const row = document.createElement('div');
+        row.className = `inv-row ${count > 0 ? 'has-count' : ''}`;
+        row.id = `invRow_${r.id}`;
+        row.style.setProperty('--row-color', r.color);
+        row.innerHTML = `
+          <div class="inv-row-info">
+            <span class="inv-row-badge">${r.id}</span>
+            <span class="inv-row-equiv">${r.dEquiv}D</span>
+          </div>
+          <div class="inv-stepper-ctrl">
+            <button type="button" class="inv-step-btn btn-minus" data-step="-1" data-rank="${r.id}" aria-label="${r.id}を1減らす">−</button>
+            <input type="number" 
+                   class="inv-num-input" 
+                   data-rank="${r.id}" 
+                   value="${count}" 
+                   min="0" 
+                   max="99999" 
+                   inputmode="numeric">
+            <button type="button" class="inv-step-btn btn-plus" data-step="1" data-rank="${r.id}" aria-label="${r.id}を1増やす">＋</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      // 入力値変更イベント
+      container.querySelectorAll('.inv-num-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const rank = e.target.dataset.rank;
+          const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+          state.inventory[rank] = val;
+          updateRowHighlight(rank, val);
+          saveStateToStorage();
+          recalculate();
+        });
+      });
+
+      // −1, +1 ボタンイベント
+      container.querySelectorAll('.inv-step-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const rank = btn.dataset.rank;
+          const stepVal = parseInt(btn.dataset.step, 10);
+          const current = state.inventory[rank] || 0;
+          const nextVal = Math.max(0, current + stepVal);
+          state.inventory[rank] = nextVal;
+          
+          const inputEl = container.querySelector(`.inv-num-input[data-rank="${rank}"]`);
+          if (inputEl) inputEl.value = nextVal;
+          
+          updateRowHighlight(rank, nextVal);
+          saveStateToStorage();
+          recalculate();
+        });
+      });
+    }
+
+    // 所持数>0の行のハイライト更新
+    function updateRowHighlight(rank, val) {
+      const row = document.getElementById(`invRow_${rank}`);
+      if (row) {
+        row.classList.toggle('has-count', val > 0);
+      }
+    }
+
+    // イベントバインド
+    function bindEvents() {
+      // 目標本数ステッパー
+      const countInput = document.getElementById('targetCountInput');
+      document.getElementById('btnDecCount').addEventListener('click', () => {
+        const val = Math.max(1, (parseInt(countInput.value, 10) || 1) - 1);
+        countInput.value = val;
+        state.targetCount = val;
+        saveStateToStorage();
+        recalculate();
+      });
+
+      document.getElementById('btnIncCount').addEventListener('click', () => {
+        const val = Math.min(999, (parseInt(countInput.value, 10) || 1) + 1);
+        countInput.value = val;
+        state.targetCount = val;
+        saveStateToStorage();
+        recalculate();
+      });
+
+      countInput.addEventListener('input', (e) => {
+        const val = Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 1));
+        state.targetCount = val;
+        saveStateToStorage();
+        recalculate();
+      });
+
+      // 全リセットボタン
+      document.getElementById('btnClearAllInv').addEventListener('click', () => {
+        if (!confirm('所持銃の入力数をすべて0にリセットしますか？')) return;
+        RANKS.forEach(r => {
+          state.inventory[r.id] = 0;
+          updateRowHighlight(r.id, 0);
+        });
+        document.querySelectorAll('.inv-num-input').forEach(input => {
+          input.value = 0;
+        });
+        saveStateToStorage();
+        recalculate();
+      });
+
+      // 手持ち最大合成シミュレートボタン
+      document.getElementById('btnSynthesizeMax').addEventListener('click', () => {
+        runMaxSynthesisSimulation();
+      });
+
+      // ガチャ設定ドロワー開閉
+      const settingsToggle = document.getElementById('settingsToggle');
+      const settingsBody = document.getElementById('settingsBody');
+      const settingsArrow = document.getElementById('settingsArrow');
+      settingsToggle.addEventListener('click', () => {
+        const isOpen = settingsBody.classList.toggle('open');
+        settingsArrow.textContent = isOpen ? '▲' : '▼';
+      });
+
+      // ガチャ設定パラメータ入力
+      const costInput = document.getElementById('inputGachaCost');
+      const rateDInput = document.getElementById('inputRateD');
+      const rateCInput = document.getElementById('inputRateC');
+
+      const onRateChange = () => {
+        state.gachaCost = Math.max(1, parseInt(costInput.value, 10) || 100);
+        state.rates.D = Math.max(0, parseFloat(rateDInput.value) || 0);
+        state.rates.C = Math.max(0, parseFloat(rateCInput.value) || 0);
+        document.getElementById('noticeCostVal').textContent = state.gachaCost.toLocaleString();
+        saveStateToStorage();
+        recalculate();
+      };
+
+      [costInput, rateDInput, rateCInput].forEach(inp => {
+        inp.addEventListener('input', onRateChange);
+      });
+
+      // スティッキーサマリーバータップで上部結果へスクロール
+      document.getElementById('stickySummaryBar').addEventListener('click', () => {
+        const targetBox = document.getElementById('resultHeroBox');
+        if (targetBox) {
+          targetBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    // 目標ランク設定
+    function setTargetRank(rankId) {
+      state.targetRankId = rankId;
+      document.querySelectorAll('.rank-pick-btn').forEach(btn => {
+        const isCur = btn.dataset.rank === rankId;
+        btn.classList.toggle('active', isCur);
+        btn.setAttribute('aria-checked', isCur);
+      });
+
+      const rankObj = RANKS.find(r => r.id === rankId);
+      if (rankObj) {
+        const badge = document.getElementById('targetBadgeDisplay');
+        badge.style.backgroundColor = rankObj.color;
+        document.getElementById('targetBadgeRank').textContent = rankObj.id;
+        document.getElementById('targetDCountText').textContent = `(1個 = ${rankObj.dEquiv.toLocaleString()}D)`;
+        document.getElementById('stickyTargetName').textContent = rankObj.id;
+      }
+
+      saveStateToStorage();
+      recalculate();
+    }
+
+    // 計算ロジック
+    function recalculate() {
+      const targetRankObj = RANKS.find(r => r.id === state.targetRankId) || RANKS[6];
+      
+      // 1. 目標に必要なD換算総数
+      const totalDNeeded = targetRankObj.dEquiv * state.targetCount;
+
+      // 2. 現在の所持D換算総数
+      let currentDEquiv = 0;
+      RANKS.forEach(r => {
+        const count = state.inventory[r.id] || 0;
+        currentDEquiv += count * r.dEquiv;
+      });
+
+      // 3. 不足D換算数
+      const deficitD = Math.max(0, totalDNeeded - currentDEquiv);
+      const isAchieved = deficitD === 0;
+
+      // 4. ガチャ期待値計算 (D100%基準)
+      const rateSum = (state.rates.D || 0) + (state.rates.C || 0);
+      const safeRateSum = rateSum > 0 ? rateSum : 100;
+      const expectedDPerPull = (
+        ((state.rates.D || 0) * 1) + 
+        ((state.rates.C || 0) * 2)
+      ) / safeRateSum;
+
+      const effRate = expectedDPerPull > 0 ? expectedDPerPull : 1;
+      const expectedPulls = Math.ceil(deficitD / effRate);
+      const expectedDiamonds = expectedPulls * state.gachaCost;
+
+      // 進捗率
+      const progressPercent = totalDNeeded > 0 
+        ? Math.min(100, (currentDEquiv / totalDNeeded) * 100) 
+        : 0;
+
+      // DOM反映（メインダッシュボード）
+      document.getElementById('totalDNeededVal').textContent = totalDNeeded.toLocaleString();
+      document.getElementById('currentDVal').textContent = currentDEquiv.toLocaleString();
+      document.getElementById('deficitDVal').textContent = deficitD.toLocaleString();
+      document.getElementById('expectedDiamondsVal').textContent = expectedDiamonds.toLocaleString();
+      document.getElementById('expectedPullsVal').textContent = expectedPulls.toLocaleString();
+      document.getElementById('noticeCostVal').textContent = state.gachaCost.toLocaleString();
+
+      // 進捗バー
+      document.getElementById('progressBarFill').style.width = `${progressPercent.toFixed(1)}%`;
+      document.getElementById('progressPercentText').textContent = `${progressPercent.toFixed(1)}%`;
+
+      // 達成バナー表示切り替え
+      const banner = document.getElementById('achievedBanner');
+      banner.classList.toggle('show', isAchieved);
+
+      // 📱 スティッキーサマリーバーへの反映
+      document.getElementById('stickyProgressFill').style.width = `${progressPercent.toFixed(1)}%`;
+      document.getElementById('stickyPercentVal').textContent = `${Math.floor(progressPercent)}%`;
+      document.getElementById('stickyDeficitVal').textContent = deficitD.toLocaleString();
+      document.getElementById('stickyDiaVal').textContent = expectedDiamonds.toLocaleString();
+    }
+
+    // 手持ち最大合成シミュレーション
+    function runMaxSynthesisSimulation() {
+      const simInv = {};
+      RANKS.forEach(r => { simInv[r.id] = state.inventory[r.id] || 0; });
+
+      for (let i = 0; i < RANKS.length - 1; i++) {
+        const curId = RANKS[i].id;
+        const nextId = RANKS[i + 1].id;
+        const count = simInv[curId];
+        const mergedToNext = Math.floor(count / 2);
+        simInv[curId] = count % 2;
+        simInv[nextId] = (simInv[nextId] || 0) + mergedToNext;
+      }
+
+      let highestRank = null;
+      for (let i = RANKS.length - 1; i >= 0; i--) {
+        if (simInv[RANKS[i].id] > 0) {
+          highestRank = { id: RANKS[i].id, count: simInv[RANKS[i].id] };
+          break;
+        }
+      }
+
+      if (!highestRank) {
+        alert('現在持っている銃が0本のため合成できません。所持数を入力してください！');
+        return;
+      }
+
+      let summary = '【最大合成シミュレーション結果】\n';
+      summary += `現在の所持品をすべて上位へ合成すると...\n`;
+      summary += `★ 最高で「${highestRank.id}ランク」が ${highestRank.count}本 作成可能です！\n\n`;
+      summary += '【合成後の手元残り】\n';
+      RANKS.slice().reverse().forEach(r => {
+        if (simInv[r.id] > 0) {
+          summary += `・${r.id}ランク: ${simInv[r.id]}本\n`;
+        }
+      });
+
+      alert(summary);
+    }
+
+    // ローカルストレージ保存/復元
+    const STORAGE_KEY = 'nyanko_gunner_sim_d100_v2';
+
+    function saveStateToStorage() {
+      try {
+        const data = {
+          targetRankId: state.targetRankId,
+          targetCount: state.targetCount,
+          inventory: state.inventory,
+          gachaCost: state.gachaCost,
+          rates: state.rates
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function loadStateFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (data.targetRankId) state.targetRankId = data.targetRankId;
+        if (data.targetCount) state.targetCount = data.targetCount;
+        if (data.inventory) state.inventory = Object.assign(state.inventory, data.inventory);
+        if (data.gachaCost) state.gachaCost = data.gachaCost;
+        if (data.rates) state.rates = Object.assign(state.rates, data.rates);
+
+        const countInput = document.getElementById('targetCountInput');
+        if (countInput) countInput.value = state.targetCount;
+
+        const costInput = document.getElementById('inputGachaCost');
+        if (costInput) costInput.value = state.gachaCost;
+
+        const rateDInput = document.getElementById('inputRateD');
+        if (rateDInput) rateDInput.value = state.rates.D;
+
+        const rateCInput = document.getElementById('inputRateC');
+        if (rateCInput) rateCInput.value = state.rates.C;
+      } catch (e) {}
+    }
+  </script>
+</body>
+</html>
