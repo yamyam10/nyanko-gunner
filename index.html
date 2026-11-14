@@ -37,18 +37,18 @@
       
       /* ランクカラー（13段階） */
       --rank-d: #8C6239;
-      --rank-c: #D4A017;
-      --rank-b: #2563EB;
-      --rank-a: #16A34A;
-      --rank-s: #EA580C;
-      --rank-ss: #DC2626;
-      --rank-sss: #9333EA;
-      --rank-x: #0284C7;
-      --rank-xx: #DB2777;
-      --rank-xxx: #CA8A04;
-      --rank-z: #1E3A8A;
-      --rank-zz: #7C3AED;
-      --rank-zzz: #991B1B;
+      --rank-c: #FEBE5A;
+      --rank-b: #93E5E3;
+      --rank-a: #92F487;
+      --rank-s: #F6F490;
+      --rank-ss: #FC8B83;
+      --rank-sss: #DE8CE1;
+      --rank-x: #8FF5C6;
+      --rank-xx: #FE89CD;
+      --rank-xxx: #FBCD03;
+      --rank-z: #0199E4;
+      --rank-zz: #F89201;
+      --rank-zzz: #FC0091;
 
       --font-main: 'M PLUS Rounded 1c', -apple-system, sans-serif;
       --font-num: 'Outfit', 'Fredoka', sans-serif;
@@ -242,6 +242,8 @@
       font-size: 1.15rem;
       font-weight: 900;
       color: var(--btn-color, var(--color-text-main));
+      -webkit-text-stroke: 1px #6c4131;
+      paint-order: stroke fill;
       line-height: 1;
     }
 
@@ -280,13 +282,19 @@
       padding: 3px 12px;
       border-radius: var(--radius-pill);
       color: #FFFFFF !important;
-      background-color: var(--badge-bg, #9333EA) !important;
+      background-color: var(--badge-bg, var(--rank-sss)) !important;
       font-family: var(--font-num);
       font-size: 1.05rem;
       font-weight: 900;
       line-height: 1.2;
       transition: background-color 0.15s ease;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    #targetBadgeRank,
+    .inv-row-badge {
+      -webkit-text-stroke: 1px #6c4131;
+      paint-order: stroke fill;
     }
 
     .target-d-text {
@@ -858,7 +866,7 @@
       <!-- 目標個数セレクタ -->
       <div class="target-bar">
         <div class="target-info">
-          <div class="target-badge" id="targetBadgeDisplay" style="background-color: #9333EA;">
+          <div class="target-badge" id="targetBadgeDisplay" style="background-color: var(--rank-sss);">
             <span id="targetBadgeRank">SSS</span>
           </div>
           <span class="target-d-text" id="targetDCountText">
@@ -885,16 +893,11 @@
               var parsed = JSON.parse(raw);
               if (parsed && parsed.targetRankId) tid = parsed.targetRankId;
             }
-            var colors = {
-              'D': '#8C6239', 'C': '#D4A017', 'B': '#2563EB', 'A': '#16A34A',
-              'S': '#EA580C', 'SS': '#DC2626', 'SSS': '#9333EA', 'X': '#0284C7',
-              'XX': '#DB2777', 'XXX': '#CA8A04', 'Z': '#1E3A8A', 'ZZ': '#7C3AED', 'ZZZ': '#991B1B'
-            };
             var dEquivs = {
               'D': 1, 'C': 2, 'B': 4, 'A': 8, 'S': 16, 'SS': 32, 'SSS': 64,
               'X': 128, 'XX': 256, 'XXX': 512, 'Z': 1024, 'ZZ': 2048, 'ZZZ': 4096
             };
-            var color = colors[tid] || '#9333EA';
+            var color = 'var(--rank-' + tid.toLowerCase() + ', var(--rank-sss))';
             var dVal = dEquivs[tid] || 64;
             var badgeEl = document.getElementById('targetBadgeDisplay');
             if (badgeEl) {
@@ -1062,20 +1065,21 @@
        JAVASCRIPT LOGIC
        ========================================================================== -->
   <script>
+    const rankColor = id => `var(--rank-${id.toLowerCase()})`;
     const RANKS = [
-      { id: 'D',   tier: 1,  dEquiv: 1,    color: '#8C6239', name: 'Dランク' },
-      { id: 'C',   tier: 2,  dEquiv: 2,    color: '#D4A017', name: 'Cランク' },
-      { id: 'B',   tier: 3,  dEquiv: 4,    color: '#2563EB', name: 'Bランク' },
-      { id: 'A',   tier: 4,  dEquiv: 8,    color: '#16A34A', name: 'Aランク' },
-      { id: 'S',   tier: 5,  dEquiv: 16,   color: '#EA580C', name: 'Sランク' },
-      { id: 'SS',  tier: 6,  dEquiv: 32,   color: '#DC2626', name: 'SSランク' },
-      { id: 'SSS', tier: 7,  dEquiv: 64,   color: '#9333EA', name: 'SSSランク' },
-      { id: 'X',   tier: 8,  dEquiv: 128,  color: '#0284C7', name: 'Xランク' },
-      { id: 'XX',  tier: 9,  dEquiv: 256,  color: '#DB2777', name: 'XXランク' },
-      { id: 'XXX', tier: 10, dEquiv: 512,  color: '#CA8A04', name: 'XXXランク' },
-      { id: 'Z',   tier: 11, dEquiv: 1024, color: '#1E3A8A', name: 'Zランク' },
-      { id: 'ZZ',  tier: 12, dEquiv: 2048, color: '#7C3AED', name: 'ZZランク' },
-      { id: 'ZZZ', tier: 13, dEquiv: 4096, color: '#991B1B', name: 'ZZZランク' }
+      { id: 'D',   tier: 1,  dEquiv: 1,    color: rankColor('D'),   name: 'Dランク' },
+      { id: 'C',   tier: 2,  dEquiv: 2,    color: rankColor('C'),   name: 'Cランク' },
+      { id: 'B',   tier: 3,  dEquiv: 4,    color: rankColor('B'),   name: 'Bランク' },
+      { id: 'A',   tier: 4,  dEquiv: 8,    color: rankColor('A'),   name: 'Aランク' },
+      { id: 'S',   tier: 5,  dEquiv: 16,   color: rankColor('S'),   name: 'Sランク' },
+      { id: 'SS',  tier: 6,  dEquiv: 32,   color: rankColor('SS'),  name: 'SSランク' },
+      { id: 'SSS', tier: 7,  dEquiv: 64,   color: rankColor('SSS'), name: 'SSSランク' },
+      { id: 'X',   tier: 8,  dEquiv: 128,  color: rankColor('X'),   name: 'Xランク' },
+      { id: 'XX',  tier: 9,  dEquiv: 256,  color: rankColor('XX'),  name: 'XXランク' },
+      { id: 'XXX', tier: 10, dEquiv: 512,  color: rankColor('XXX'), name: 'XXXランク' },
+      { id: 'Z',   tier: 11, dEquiv: 1024, color: rankColor('Z'),   name: 'Zランク' },
+      { id: 'ZZ',  tier: 12, dEquiv: 2048, color: rankColor('ZZ'),  name: 'ZZランク' },
+      { id: 'ZZZ', tier: 13, dEquiv: 4096, color: rankColor('ZZZ'), name: 'ZZZランク' }
     ];
 
     const state = {
