@@ -249,7 +249,7 @@
       font-family: var(--font-main);
     }
 
-    /* 目標個数セレクタ（スマホで1行にすっきり収まるデザイン） */
+    /* 目標個数セレクタ（スマホで重ならないレスポンシブ設計） */
     .target-bar {
       display: flex;
       align-items: center;
@@ -259,7 +259,8 @@
       border-radius: var(--radius-md);
       border: 1px solid var(--color-border);
       margin-bottom: 1.2rem;
-      gap: 8px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .target-info {
@@ -283,7 +284,7 @@
     }
 
     .target-d-text {
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       font-weight: 800;
       color: var(--color-text-sub);
       white-space: nowrap;
@@ -292,7 +293,7 @@
     .target-count-control {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
       flex-shrink: 0;
     }
 
@@ -329,6 +330,25 @@
       border-radius: 8px;
       background: #FFF;
       color: var(--color-text-main);
+    }
+
+    @media (max-width: 520px) {
+      .target-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px 12px;
+      }
+      .target-info {
+        justify-content: space-between;
+        width: 100%;
+      }
+      .target-count-control {
+        justify-content: space-between;
+        width: 100%;
+        padding-top: 8px;
+        border-top: 1px dashed var(--color-border);
+      }
     }
 
     /* --------------------------------------------------------------------------
@@ -840,10 +860,12 @@
           </span>
         </div>
         <div class="target-count-control">
-          <span style="font-size: 0.78rem; font-weight: 800;">目標数:</span>
-          <button type="button" class="stepper-btn" id="btnDecCount" aria-label="目標本数を1減らす">−</button>
-          <input type="number" id="targetCountInput" class="target-num-input" value="1" min="1" max="999" inputmode="numeric">
-          <button type="button" class="stepper-btn" id="btnIncCount" aria-label="目標本数を1増やす">＋</button>
+          <span style="font-size: 0.8rem; font-weight: 800;">目標数:</span>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <button type="button" class="stepper-btn" id="btnDecCount" aria-label="目標本数を1減らす">−</button>
+            <input type="number" id="targetCountInput" class="target-num-input" value="1" min="1" max="999" inputmode="numeric">
+            <button type="button" class="stepper-btn" id="btnIncCount" aria-label="目標本数を1増やす">＋</button>
+          </div>
         </div>
       </div>
 
