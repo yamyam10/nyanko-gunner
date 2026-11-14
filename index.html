@@ -277,10 +277,12 @@
       padding: 3px 12px;
       border-radius: var(--radius-pill);
       color: #FFF;
+      background-color: var(--rank-sss, #9333EA);
       font-family: var(--font-num);
       font-size: 1.05rem;
       font-weight: 900;
       line-height: 1.2;
+      transition: background-color 0.2s ease;
     }
 
     .target-d-text {
@@ -852,7 +854,7 @@
       <!-- 目標個数セレクタ -->
       <div class="target-bar">
         <div class="target-info">
-          <div class="target-badge" id="targetBadgeDisplay">
+          <div class="target-badge" id="targetBadgeDisplay" style="background-color: #9333EA;">
             <span id="targetBadgeRank">SSS</span>
           </div>
           <span class="target-d-text" id="targetDCountText">
@@ -1058,6 +1060,7 @@
       renderRankButtons();
       renderInventoryList();
       bindEvents();
+      setTargetRank(state.targetRankId); // 読み込み時にも確実に背景色・表示を反映
       recalculate();
     });
 
