@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>にゃんこ銃士 合成＆必要ダイヤ計算シミュレーター</title>
   <meta name="description" content="マージ系放置ゲーム「にゃんこ銃士」専用の合成・必要ダイヤ計算シミュレーター。スマホ片手操作に最適化。">
   <meta name="theme-color" content="#4A3728">
@@ -276,13 +279,14 @@
       gap: 4px;
       padding: 3px 12px;
       border-radius: var(--radius-pill);
-      color: #FFF;
-      background-color: var(--rank-sss, #9333EA);
+      color: #FFFFFF !important;
+      background-color: var(--badge-bg, #9333EA) !important;
       font-family: var(--font-num);
       font-size: 1.05rem;
       font-weight: 900;
       line-height: 1.2;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.15s ease;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
     .target-d-text {
@@ -871,6 +875,40 @@
         </div>
       </div>
 
+      <!-- ページ読み込み時に一瞬でも色が消えないよう即時復元するインラインスクリプト -->
+      <script>
+        (function() {
+          try {
+            var raw = localStorage.getItem('nyanko_gunner_sim_d100_v2');
+            var tid = 'SSS';
+            if (raw) {
+              var parsed = JSON.parse(raw);
+              if (parsed && parsed.targetRankId) tid = parsed.targetRankId;
+            }
+            var colors = {
+              'D': '#8C6239', 'C': '#D4A017', 'B': '#2563EB', 'A': '#16A34A',
+              'S': '#EA580C', 'SS': '#DC2626', 'SSS': '#9333EA', 'X': '#0284C7',
+              'XX': '#DB2777', 'XXX': '#CA8A04', 'Z': '#1E3A8A', 'ZZ': '#7C3AED', 'ZZZ': '#991B1B'
+            };
+            var dEquivs = {
+              'D': 1, 'C': 2, 'B': 4, 'A': 8, 'S': 16, 'SS': 32, 'SSS': 64,
+              'X': 128, 'XX': 256, 'XXX': 512, 'Z': 1024, 'ZZ': 2048, 'ZZZ': 4096
+            };
+            var color = colors[tid] || '#9333EA';
+            var dVal = dEquivs[tid] || 64;
+            var badgeEl = document.getElementById('targetBadgeDisplay');
+            if (badgeEl) {
+              badgeEl.style.setProperty('--badge-bg', color);
+              badgeEl.style.setProperty('background-color', color, 'important');
+            }
+            var rankEl = document.getElementById('targetBadgeRank');
+            if (rankEl) rankEl.textContent = tid;
+            var dTextEl = document.getElementById('targetDCountText');
+            if (dTextEl) dTextEl.textContent = '(1個 = ' + dVal.toLocaleString() + 'D)';
+          } catch(e) {}
+        })();
+      </script>
+
       <!-- リアルタイム計算結果ダッシュボード -->
       <div class="result-hero-box" id="resultHeroBox">
         
@@ -1253,13 +1291,19 @@
         btn.setAttribute('aria-checked', isCur);
       });
 
-      const rankObj = RANKS.find(r => r.id === rankId);
+      const rankObj = RANKS.find(r => r.id === rankId) || RANKS[6];
       if (rankObj) {
         const badge = document.getElementById('targetBadgeDisplay');
-        badge.style.backgroundColor = rankObj.color;
-        document.getElementById('targetBadgeRank').textContent = rankObj.id;
-        document.getElementById('targetDCountText').textContent = `(1個 = ${rankObj.dEquiv.toLocaleString()}D)`;
-        document.getElementById('stickyTargetName').textContent = rankObj.id;
+        if (badge) {
+          badge.style.setProperty('--badge-bg', rankObj.color);
+          badge.style.setProperty('background-color', rankObj.color, 'important');
+        }
+        const rankText = document.getElementById('targetBadgeRank');
+        if (rankText) rankText.textContent = rankObj.id;
+        const dText = document.getElementById('targetDCountText');
+        if (dText) dText.textContent = `(1個 = ${rankObj.dEquiv.toLocaleString()}D)`;
+        const stickyName = document.getElementById('stickyTargetName');
+        if (stickyName) stickyName.textContent = rankObj.id;
       }
 
       saveStateToStorage();
