@@ -6,8 +6,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>にゃんこ銃士 合成＆必要ダイヤ計算シミュレーター</title>
-  <meta name="description" content="マージ系放置ゲーム「にゃんこ銃士」専用の合成・必要ダイヤ計算シミュレーター。スマホ片手操作に最適化。">
+  <title>にゃんこ銃士 武器・ペット・魚 合成＆必要ダイヤ計算シミュレーター</title>
+  <meta name="description" content="マージ系放置ゲーム「にゃんこ銃士」の武器・ペット・魚の合成数と必要ダイヤを計算するシミュレーター。">
   <meta name="theme-color" content="#4A3728">
   
   <!-- Google Fonts: 親しみやすい丸ゴシック & 英数フォント -->
@@ -50,6 +50,39 @@
       --rank-zz: #F89201;
       --rank-zzz: #FC0091;
 
+      /* ペット用ランクカラー（必要に応じて変更） */
+      --pet-rank-d: #8C6239;
+      --pet-rank-c: #FEBE5A;
+      --pet-rank-b: #93E5E3;
+      --pet-rank-a: #92F487;
+      --pet-rank-s: #F6F490;
+      --pet-rank-ss: #FC8B83;
+      --pet-rank-sss: #DE8CE1;
+      --pet-rank-x: #8FF5C6;
+      --pet-rank-xx: #FE89CD;
+      --pet-rank-xxx: #FBCD03;
+      --pet-rank-z: #0199E4;
+      --pet-rank-zz: #F89201;
+      --pet-rank-zzz: #FC0091;
+
+      /* 魚用ランクカラー（必要に応じて変更） */
+      --fish-rank-d: #8C6239;
+      --fish-rank-c: #FEBE5A;
+      --fish-rank-b: #93E5E3;
+      --fish-rank-a: #92F487;
+      --fish-rank-s: #F6F490;
+      --fish-rank-ss: #FC8B83;
+      --fish-rank-sss: #DE8CE1;
+      --fish-rank-x: #8FF5C6;
+      --fish-rank-xx: #FE89CD;
+      --fish-rank-xxx: #FBCD03;
+      --fish-rank-z: #0199E4;
+      --fish-rank-zz: #F89201;
+      --fish-rank-zzz: #FC0091;
+      --fish-rank-y: #4CF13B;
+      --fish-rank-yy: #44F4C3;
+      --fish-rank-yyy: #FF00A1;
+
       --font-main: 'M PLUS Rounded 1c', -apple-system, sans-serif;
       --font-num: 'Outfit', 'Fredoka', sans-serif;
       
@@ -85,6 +118,30 @@
       max-width: 880px;
       margin: 0 auto;
       padding: 0 12px;
+    }
+
+    .category-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 0 0 1rem;
+    }
+
+    .category-tab {
+      min-height: 44px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      color: var(--color-text-sub);
+      font: 800 0.95rem var(--font-main);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .category-tab[aria-selected="true"] {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: #FFF;
     }
 
     /* --------------------------------------------------------------------------
@@ -703,6 +760,13 @@
       gap: 10px;
     }
 
+    .gacha-rate-fields {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      grid-column: 1 / -1;
+    }
+
     .param-field {
       display: flex;
       flex-direction: column;
@@ -840,13 +904,19 @@
         <span>にゃんこ銃士 合成シミュレーター</span>
       </div>
       <h1 class="hero-title">にゃんこ銃士 <span>合成計算ツール</span></h1>
-      <p class="hero-subtitle">同ランク2個マージの必要本数 ＆ 必要ダイヤ数を瞬時に計算！</p>
+      <p class="hero-subtitle">同ランク2個マージの必要数 ＆ 必要ダイヤ数を計算！</p>
     </div>
   </header>
 
   <main class="app-container">
 
-    <div class="card">
+    <div class="category-tabs" role="tablist" aria-label="シミュレーター種別">
+      <button type="button" class="category-tab" id="tabWeapon" role="tab" aria-selected="true" aria-controls="simulatorPanel" data-category="weapon">武器</button>
+      <button type="button" class="category-tab" id="tabPet" role="tab" aria-selected="false" aria-controls="simulatorPanel" data-category="pet">ペット</button>
+      <button type="button" class="category-tab" id="tabFish" role="tab" aria-selected="false" aria-controls="simulatorPanel" data-category="fish">魚</button>
+    </div>
+
+    <div class="card" id="simulatorPanel" role="tabpanel" aria-labelledby="tabWeapon">
       
       <!-- 目標ランク設定ヘッダー -->
       <div class="card-header">
@@ -939,7 +1009,7 @@
             </div>
             <div class="metric-val highlight-d">
               <span id="totalDNeededVal">64</span>
-              <span class="metric-unit">本</span>
+              <span class="metric-unit" id="totalDUnit">本</span>
             </div>
           </div>
 
@@ -950,7 +1020,7 @@
             </div>
             <div class="metric-val">
               <span id="currentDVal">0</span>
-              <span class="metric-unit">本分</span>
+              <span class="metric-unit" id="currentDUnit">本分</span>
             </div>
           </div>
 
@@ -961,7 +1031,7 @@
             </div>
             <div class="metric-val" style="color: #DC2626;">
               <span id="deficitDVal">64</span>
-              <span class="metric-unit">本分</span>
+              <span class="metric-unit" id="deficitDUnit">本分</span>
             </div>
           </div>
 
@@ -979,19 +1049,19 @@
 
         <!-- ガチャ条件表示バナー -->
         <div class="rate-condition-notice">
-          <span>🎲 1回 <strong><span id="noticeCostVal">100</span> ダイヤ</strong>（Dランク100%排出で算出）</span>
+          <span>🎲 1回 <strong><span id="noticeCostVal">100</span> ダイヤ</strong>（設定した排出率で算出）</span>
           <span>必要ガチャ: <strong id="expectedPullsVal">64</strong> 回</span>
         </div>
 
       </div>
 
-      <!-- 現在の所持数入力セクション (D 〜 ZZ) -->
+      <!-- 現在の所持数入力セクション -->
       <div class="inventory-section">
         
         <div class="inventory-tools">
           <div class="card-title-group">
             <span class="card-icon">🎒</span>
-            <h3 style="font-size: 1rem; font-weight: 800;">現在持っている銃 (D 〜 ZZ)</h3>
+            <h3 style="font-size: 1rem; font-weight: 800;">現在持っている<span id="itemNameLabel">銃</span> (<span id="inventoryRankRange">D 〜 ZZ</span>)</h3>
           </div>
           <div class="tool-btn-group">
             <button type="button" class="btn-pill" id="btnSynthesizeMax">🚀 最大合成シミュレート</button>
@@ -1018,17 +1088,10 @@
               <label for="inputGachaCost">1回の消費ダイヤ</label>
               <input type="number" id="inputGachaCost" value="100" min="1" step="10" inputmode="numeric">
             </div>
-            <div class="param-field">
-              <label for="inputRateD">D排出率 (%)</label>
-              <input type="number" id="inputRateD" value="100" min="0" max="100" step="1" inputmode="decimal">
-            </div>
-            <div class="param-field">
-              <label for="inputRateC">C排出率 (%)</label>
-              <input type="number" id="inputRateC" value="0" min="0" max="100" step="1" inputmode="decimal">
-            </div>
+            <div class="gacha-rate-fields" id="gachaRateFields"></div>
           </div>
           <p style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 6px;">
-            ※ 初期状態は「Dランク100%排出（100ダイヤ＝1D）」設定です。
+            ※ 初期の1回単価は武器100・ペット100・魚200ダイヤです。排出率はカテゴリごとに設定できます。
           </p>
         </div>
       </div>
@@ -1048,7 +1111,7 @@
           </div>
           <span id="stickyPercentVal">0%</span>
         </div>
-        <div class="sticky-deficit">不足: <strong id="stickyDeficitVal">64</strong> 本分</div>
+        <div class="sticky-deficit">不足: <strong id="stickyDeficitVal">64</strong> <span id="stickyDeficitUnit">本分</span></div>
       </div>
       <div class="sticky-right">
         <span class="sticky-dia-label">必要💎</span>
@@ -1065,48 +1128,113 @@
        JAVASCRIPT LOGIC
        ========================================================================== -->
   <script>
-    const rankColor = id => `var(--rank-${id.toLowerCase()})`;
-    const RANKS = [
-      { id: 'D',   tier: 1,  dEquiv: 1,    color: rankColor('D'),   name: 'Dランク' },
-      { id: 'C',   tier: 2,  dEquiv: 2,    color: rankColor('C'),   name: 'Cランク' },
-      { id: 'B',   tier: 3,  dEquiv: 4,    color: rankColor('B'),   name: 'Bランク' },
-      { id: 'A',   tier: 4,  dEquiv: 8,    color: rankColor('A'),   name: 'Aランク' },
-      { id: 'S',   tier: 5,  dEquiv: 16,   color: rankColor('S'),   name: 'Sランク' },
-      { id: 'SS',  tier: 6,  dEquiv: 32,   color: rankColor('SS'),  name: 'SSランク' },
-      { id: 'SSS', tier: 7,  dEquiv: 64,   color: rankColor('SSS'), name: 'SSSランク' },
-      { id: 'X',   tier: 8,  dEquiv: 128,  color: rankColor('X'),   name: 'Xランク' },
-      { id: 'XX',  tier: 9,  dEquiv: 256,  color: rankColor('XX'),  name: 'XXランク' },
-      { id: 'XXX', tier: 10, dEquiv: 512,  color: rankColor('XXX'), name: 'XXXランク' },
-      { id: 'Z',   tier: 11, dEquiv: 1024, color: rankColor('Z'),   name: 'Zランク' },
-      { id: 'ZZ',  tier: 12, dEquiv: 2048, color: rankColor('ZZ'),  name: 'ZZランク' },
-      { id: 'ZZZ', tier: 13, dEquiv: 4096, color: rankColor('ZZZ'), name: 'ZZZランク' }
-    ];
-
-    const state = {
+    const BASE_RANK_IDS = ['D', 'C', 'B', 'A', 'S', 'SS', 'SSS', 'X', 'XX', 'XXX', 'Z', 'ZZ', 'ZZZ'];
+    const createRanks = (ids, colorPrefix) => ids.map((id, index) => ({
+      id,
+      tier: index + 1,
+      dEquiv: 2 ** index,
+      color: `var(--${colorPrefix}-${id.toLowerCase()})`,
+      name: `${id}ランク`
+    }));
+    const CATEGORIES = {
+      weapon: {
+        label: '武器',
+        itemName: '銃',
+        itemUnit: '本',
+        ranks: createRanks(BASE_RANK_IDS, 'rank'),
+        defaultGachaCost: 100,
+        gachaRanks: ['D', 'C'],
+        defaultRates: { D: 100, C: 0 },
+        storageKey: 'nyanko_gunner_sim_d100_v2'
+      },
+      pet: {
+        label: 'ペット',
+        itemName: 'ペット',
+        itemUnit: '匹',
+        ranks: createRanks(BASE_RANK_IDS, 'pet-rank'),
+        defaultGachaCost: 100,
+        gachaRanks: ['D', 'C'],
+        defaultRates: { D: 100, C: 0 },
+        storageKey: 'nyanko_gunner_pet_sim_v1'
+      },
+      fish: {
+        label: '魚',
+        itemName: '魚',
+        itemUnit: '匹',
+        ranks: createRanks([...BASE_RANK_IDS, 'Y', 'YY', 'YYY'], 'fish-rank'),
+        defaultGachaCost: 200,
+        gachaRanks: ['C', 'B', 'A'],
+        defaultRates: { C: 60, B: 30, A: 10 },
+        storageKey: 'nyanko_gunner_fish_sim_v1'
+      }
+    };
+    const createState = (gachaCost, rates) => ({
       targetRankId: 'SSS',
       targetCount: 1,
       inventory: {},
-      gachaCost: 100,
-      rates: {
-        D: 100,
-        C: 0
-      }
-    };
-
-    RANKS.forEach(r => {
-      state.inventory[r.id] = 0;
+      gachaCost,
+      rates: { ...rates }
     });
+    const states = {
+      weapon: createState(CATEGORIES.weapon.defaultGachaCost, CATEGORIES.weapon.defaultRates),
+      pet: createState(CATEGORIES.pet.defaultGachaCost, CATEGORIES.pet.defaultRates),
+      fish: createState(CATEGORIES.fish.defaultGachaCost, CATEGORIES.fish.defaultRates)
+    };
+    let activeCategory = 'weapon';
+    let RANKS = CATEGORIES[activeCategory].ranks;
+    let state = states[activeCategory];
 
     document.addEventListener('DOMContentLoaded', () => {
       loadStateFromStorage();
       renderRankButtons();
       renderInventoryList();
+      renderGachaRateFields();
       bindEvents();
+      bindCategoryTabs();
+      updateCategoryLabels();
       setTargetRank(state.targetRankId); // 読み込み時にも確実に背景色・表示を反映
       recalculate();
     });
 
-    // 目標ランク選択ボタンの描画 (C 〜 ZZZ)
+    function bindCategoryTabs() {
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchCategory(tab.dataset.category));
+      });
+    }
+
+    function switchCategory(categoryId) {
+      if (!CATEGORIES[categoryId] || categoryId === activeCategory) return;
+
+      saveStateToStorage();
+      activeCategory = categoryId;
+      RANKS = CATEGORIES[activeCategory].ranks;
+      state = states[activeCategory];
+      loadStateFromStorage();
+      renderRankButtons();
+      renderInventoryList();
+      renderGachaRateFields();
+      updateCategoryLabels();
+      setTargetRank(state.targetRankId);
+    }
+
+    function updateCategoryLabels() {
+      const category = CATEGORIES[activeCategory];
+      const inventoryRanks = RANKS.slice(0, -1);
+      document.getElementById('itemNameLabel').textContent = category.itemName;
+      document.getElementById('inventoryRankRange').textContent =
+        `${inventoryRanks[0].id} 〜 ${inventoryRanks[inventoryRanks.length - 1].id}`;
+      document.getElementById('totalDUnit').textContent = category.itemUnit;
+      document.getElementById('currentDUnit').textContent = `${category.itemUnit}分`;
+      document.getElementById('deficitDUnit').textContent = `${category.itemUnit}分`;
+      document.getElementById('stickyDeficitUnit').textContent = `${category.itemUnit}分`;
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        const isSelected = tab.dataset.category === activeCategory;
+        tab.setAttribute('aria-selected', isSelected);
+      });
+      document.getElementById('simulatorPanel').setAttribute('aria-labelledby', `tab${activeCategory[0].toUpperCase()}${activeCategory.slice(1)}`);
+    }
+
+    // 目標ランク選択ボタンの描画
     function renderRankButtons() {
       const container = document.getElementById('rankSelectorGrid');
       container.innerHTML = '';
@@ -1132,12 +1260,12 @@
       });
     }
 
-    // スマホ片手操作に最適な行ステッパーリストの描画 (D 〜 ZZ)
+    // スマホ片手操作に最適な行ステッパーリストの描画
     function renderInventoryList() {
       const container = document.getElementById('inventoryList');
       container.innerHTML = '';
 
-      const inputRanks = RANKS.slice(0, 12);
+      const inputRanks = RANKS.slice(0, -1);
 
       inputRanks.forEach(r => {
         const count = state.inventory[r.id] || 0;
@@ -1204,6 +1332,36 @@
       }
     }
 
+    function renderGachaRateFields() {
+      const container = document.getElementById('gachaRateFields');
+      container.innerHTML = '';
+      CATEGORIES[activeCategory].gachaRanks.forEach(rankId => {
+        const field = document.createElement('div');
+        field.className = 'param-field';
+
+        const label = document.createElement('label');
+        label.htmlFor = `inputRate${rankId}`;
+        label.textContent = `${rankId}排出率 (%)`;
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.id = `inputRate${rankId}`;
+        input.min = '0';
+        input.max = '100';
+        input.step = '1';
+        input.inputMode = 'decimal';
+        input.value = state.rates[rankId] ?? 0;
+        input.addEventListener('input', () => {
+          state.rates[rankId] = Math.max(0, parseFloat(input.value) || 0);
+          saveStateToStorage();
+          recalculate();
+        });
+
+        field.append(label, input);
+        container.appendChild(field);
+      });
+    }
+
     // イベントバインド
     function bindEvents() {
       // 目標本数ステッパー
@@ -1233,7 +1391,7 @@
 
       // 全リセットボタン
       document.getElementById('btnClearAllInv').addEventListener('click', () => {
-        if (!confirm('所持銃の入力数をすべて0にリセットしますか？')) return;
+        if (!confirm(`所持${CATEGORIES[activeCategory].itemName}の入力数をすべて0にリセットしますか？`)) return;
         RANKS.forEach(r => {
           state.inventory[r.id] = 0;
           updateRowHighlight(r.id, 0);
@@ -1259,23 +1417,16 @@
         settingsArrow.textContent = isOpen ? '▲' : '▼';
       });
 
-      // ガチャ設定パラメータ入力
+      // ガチャ単価入力
       const costInput = document.getElementById('inputGachaCost');
-      const rateDInput = document.getElementById('inputRateD');
-      const rateCInput = document.getElementById('inputRateC');
-
-      const onRateChange = () => {
-        state.gachaCost = Math.max(1, parseInt(costInput.value, 10) || 100);
-        state.rates.D = Math.max(0, parseFloat(rateDInput.value) || 0);
-        state.rates.C = Math.max(0, parseFloat(rateCInput.value) || 0);
+      const onCostChange = () => {
+        state.gachaCost = Math.max(1, parseInt(costInput.value, 10) || CATEGORIES[activeCategory].defaultGachaCost);
         document.getElementById('noticeCostVal').textContent = state.gachaCost.toLocaleString();
         saveStateToStorage();
         recalculate();
       };
 
-      [costInput, rateDInput, rateCInput].forEach(inp => {
-        inp.addEventListener('input', onRateChange);
-      });
+      costInput.addEventListener('input', onCostChange);
 
       // スティッキーサマリーバータップで上部結果へスクロール
       document.getElementById('stickySummaryBar').addEventListener('click', () => {
@@ -1332,14 +1483,18 @@
       const deficitD = Math.max(0, totalDNeeded - currentDEquiv);
       const isAchieved = deficitD === 0;
 
-      // 4. ガチャ期待値計算 (D100%基準)
-      const rateSum = (state.rates.D || 0) + (state.rates.C || 0);
-      const safeRateSum = rateSum > 0 ? rateSum : 100;
-      const expectedDPerPull = (
-        ((state.rates.D || 0) * 1) + 
-        ((state.rates.C || 0) * 2)
-      ) / safeRateSum;
-
+      // 4. ガチャ期待値計算
+      let rateSum = 0;
+      let expectedDTotal = 0;
+      CATEGORIES[activeCategory].gachaRanks.forEach(rankId => {
+        const rate = state.rates[rankId] || 0;
+        const rank = RANKS.find(r => r.id === rankId);
+        if (rank) {
+          rateSum += rate;
+          expectedDTotal += rate * rank.dEquiv;
+        }
+      });
+      const expectedDPerPull = rateSum > 0 ? expectedDTotal / rateSum : 0;
       const effRate = expectedDPerPull > 0 ? expectedDPerPull : 1;
       const expectedPulls = Math.ceil(deficitD / effRate);
       const expectedDiamonds = expectedPulls * state.gachaCost;
@@ -1395,26 +1550,24 @@
       }
 
       if (!highestRank) {
-        alert('現在持っている銃が0本のため合成できません。所持数を入力してください！');
+        alert(`現在持っている${CATEGORIES[activeCategory].itemName}が0${CATEGORIES[activeCategory].itemUnit}のため合成できません。所持数を入力してください！`);
         return;
       }
 
       let summary = '【最大合成シミュレーション結果】\n';
       summary += `現在の所持品をすべて上位へ合成すると...\n`;
-      summary += `★ 最高で「${highestRank.id}ランク」が ${highestRank.count}本 作成可能です！\n\n`;
+      summary += `★ 最高で「${highestRank.id}ランク」が ${highestRank.count}${CATEGORIES[activeCategory].itemUnit} 作成可能です！\n\n`;
       summary += '【合成後の手元残り】\n';
       RANKS.slice().reverse().forEach(r => {
         if (simInv[r.id] > 0) {
-          summary += `・${r.id}ランク: ${simInv[r.id]}本\n`;
+          summary += `・${r.id}ランク: ${simInv[r.id]}${CATEGORIES[activeCategory].itemUnit}\n`;
         }
       });
 
       alert(summary);
     }
 
-    // ローカルストレージ保存/復元
-    const STORAGE_KEY = 'nyanko_gunner_sim_d100_v2';
-
+    // カテゴリごとにローカルストレージを分けて保存/復元
     function saveStateToStorage() {
       try {
         const data = {
@@ -1424,33 +1577,31 @@
           gachaCost: state.gachaCost,
           rates: state.rates
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(CATEGORIES[activeCategory].storageKey, JSON.stringify(data));
       } catch (e) {}
     }
 
     function loadStateFromStorage() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        if (data.targetRankId) state.targetRankId = data.targetRankId;
-        if (data.targetCount) state.targetCount = data.targetCount;
-        if (data.inventory) state.inventory = Object.assign(state.inventory, data.inventory);
-        if (data.gachaCost) state.gachaCost = data.gachaCost;
-        if (data.rates) state.rates = Object.assign(state.rates, data.rates);
-
-        const countInput = document.getElementById('targetCountInput');
-        if (countInput) countInput.value = state.targetCount;
-
-        const costInput = document.getElementById('inputGachaCost');
-        if (costInput) costInput.value = state.gachaCost;
-
-        const rateDInput = document.getElementById('inputRateD');
-        if (rateDInput) rateDInput.value = state.rates.D;
-
-        const rateCInput = document.getElementById('inputRateC');
-        if (rateCInput) rateCInput.value = state.rates.C;
+        const raw = localStorage.getItem(CATEGORIES[activeCategory].storageKey);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.targetRankId && RANKS.some(r => r.id === data.targetRankId)) {
+            state.targetRankId = data.targetRankId;
+          }
+          if (data.targetCount) state.targetCount = data.targetCount;
+          if (data.inventory) state.inventory = Object.assign(state.inventory, data.inventory);
+          if (data.gachaCost) state.gachaCost = data.gachaCost;
+          if (data.rates) state.rates = Object.assign(state.rates, data.rates);
+        }
       } catch (e) {}
+
+      const countInput = document.getElementById('targetCountInput');
+      if (countInput) countInput.value = state.targetCount;
+
+      const costInput = document.getElementById('inputGachaCost');
+      if (costInput) costInput.value = state.gachaCost;
+
     }
   </script>
 </body>
